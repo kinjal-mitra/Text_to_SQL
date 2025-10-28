@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to SQL Query</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .query-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .input-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-card {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-top: 20px;
+        }
+
+        .results-card.active {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .results-card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .sql-query {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            word-wrap: break-word;
+            color: #333;
+        }
+
+        .result-content {
+            margin-top: 20px;
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .single-value {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 1.5em;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .list-container {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .list-item {
+            background: white;
+            padding: 12px 20px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .error {
+            background: #ff4444;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .empty-result {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .query-card, .results-card {
+                padding: 20px;
+            }
+
+            table {
+                font-size: 0.9em;
+            }
+
+            th, td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Text to SQL Query</h1>
+            <h3>Ask questions in natural language and get SQL results <br>LLM: Google Gemini, Database: MySQL </h3>
+            <h5>A schema needs to be created first in MySQL along with the tables</h5>
+        </div>
+
+        <div class="query-card">
+            <div class="input-group">
+                <label for="question">Enter Your Question:</label>
+                <textarea 
+                    id="question" 
+                    placeholder="e.g., Show me all customers from New York, What is the total revenue?, List top 5 products by sales"
+                ></textarea>
+            </div>
+            <button class="btn" onclick="submitQuery()">Generate SQL Query & Execute</button>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 10px; color: #666;">Processing your query...</p>
+            </div>
+        </div>
+
+        <div class="results-card" id="results">
+            <h2>Results</h2>
+            <div id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        async function submitQuery() {
+            const question = document.getElementById('question').value.trim();
+            
+            if (!question) {
+                alert('Please enter a question');
+                return;
+            }
+
+            const btn = document.querySelector('.btn');
+            const loading = document.getElementById('loading');
+            const resultsCard = document.getElementById('results');
+            const resultContent = document.getElementById('resultContent');
+
+            // Reset UI
+            btn.disabled = true;
+            loading.classList.add('active');
+            resultsCard.classList.remove('active');
+
+            try {
+                const response = await fetch('/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: question })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    displayError(data.error);
+                }
+            } catch (error) {
+                displayError('Failed to connect to server: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                loading.classList.remove('active');
+            }
+        }
+
+        function displayResults(data) {
+            const resultContent = document.getElementById('resultContent');
+            const resultsCard = document.getElementById('results');
+
+            let html = `
+                <div class="sql-query">
+                    <strong>Generated SQL Query:</strong><br>
+                    ${escapeHtml(data.sql_query)}
+                </div>
+                <div class="result-content">
+                    <div class="result-label">Query Results:</div>
+            `;
+
+            const results = data.results;
+
+            if (results.type === 'empty' || results.data === null) {
+                html += '<div class="empty-result">No results found</div>';
+            } else if (results.type === 'single') {
+                html += `<div class="single-value">${escapeHtml(String(results.data))}</div>`;
+            } else if (results.type === 'list') {
+                html += '<div class="list-container">';
+                results.data.forEach(item => {
+                    html += `<div class="list-item">${escapeHtml(String(item))}</div>`;
+                });
+                html += '</div>';
+            } else if (results.type === 'table') {
+                html += '<div class="table-container"><table>';
+                
+                // Generate headers
+                if (results.data.length > 0) {
+                    const firstRow = results.data[0];
+                    html += '<thead><tr>';
+                    for (let i = 0; i < firstRow.length; i++) {
+                        html += `<th>Column ${i + 1}</th>`;
+                    }
+                    html += '</tr></thead>';
+                    
+                    // Generate rows
+                    html += '<tbody>';
+                    results.data.forEach(row => {
+                        html += '<tr>';
+                        row.forEach(cell => {
+                            html += `<td>${escapeHtml(String(cell))}</td>`;
+                        });
+                        html += '</tr>';
+                    });
+                    html += '</tbody>';
+                }
+                
+                html += '</table></div>';
+            } else if (results.type === 'text') {
+                html += `<div class="list-container"><div class="list-item">${escapeHtml(String(results.data))}</div></div>`;
+            }
+
+            html += '</div>';
+            resultContent.innerHTML = html;
+            resultsCard.classList.add('active');
+        }
+
+        function displayError(error) {
+            const resultContent = document.getElementById('resultContent');
+            const resultsCard = document.getElementById('results');
+
+            resultContent.innerHTML = `
+                <div class="error">
+                    <strong>Error:</strong><br>
+                    ${escapeHtml(error)}
+                </div>
+            `;
+            resultsCard.classList.add('active');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Allow Enter key to submit (Ctrl+Enter for new line)
+        document.getElementById('question').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                e.preventDefault();
+                submitQuery();
+            }
+        });
+    </script>
+</body>
+</html>
