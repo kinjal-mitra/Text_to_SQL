@@ -188,7 +188,6 @@ Modify the database connection settings in `app.py`:
 host = 'localhost'
 port = '3306'
 username = 'root'
-database_schema = 'text_to_sql'
 ```
 
 ### LLM Model Configuration
