@@ -5,6 +5,9 @@ A Flask-based web application that converts natural language questions into SQL 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
 ![Flask](https://img.shields.io/badge/Flask-3.0+-green.svg)
 ![LangChain](https://img.shields.io/badge/LangChain-Latest-orange.svg)
+![Claude](https://simpleicons.org/?modal=icon&q=claude)
+![Gemini Gemini](https://simpleicons.org/?modal=icon&q=googlegemini)
+
 
 ## Features
 
