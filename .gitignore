@@ -1,4 +1,5 @@
 .env
 query_generator.py
-ragas_research.ipynb
 venv/
+models/
+__pycache__/
